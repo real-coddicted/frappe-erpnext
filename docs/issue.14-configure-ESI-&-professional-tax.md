@@ -37,8 +37,8 @@ Configure the statutory Employee State Insurance (ESI) and Professional Tax (PT)
 
 ## Acceptance Criteria
 
-- ESI deduction configured as **0.75% of Gross Salary** for employees with **Gross Salary ≤ ₹21,000**.
-- Professional Tax configured using the required slab condition (**₹200 for Gross Salary ≥ ₹15,000**).
+- ESI deduction configured as **0.75% of (Basic + HRA + Special Allowance)** for employees where **(B + HRA + SA) ≤ ₹21,000**.
+- Professional Tax configured as a fixed deduction of **₹200** for employees where **(B + HRA + SA) ≥ ₹15,000**.
 - ESI and Professional Tax deduction components added to the required Salary Structures.
 - Salary Slip verification confirms ESI is applied only to eligible employees.
 
@@ -59,11 +59,11 @@ The following configuration was applied:
 | Type | Deduction |
 | Abbreviation | ESI |
 | Amount Based on Formula | Enabled |
-| Condition | `GROSS <= 21000` |
-| Formula | `GROSS * 0.0075` |
+| Condition | `(B + HRA + SA) <= 21000` |
+| Formula | `(B + HRA + SA) * 0.0075` |
 | Depends on Payment Days | Disabled |
 
-This configuration ensures that ESI is calculated only for employees whose Gross Salary does not exceed the statutory eligibility limit.
+This configuration calculates Employee State Insurance (ESI) at the statutory rate of **0.75%** only when the employee's total salary calculated as **Basic + HRA + Special Allowance** is less than or equal to **₹21,000**.
 
 **Reference:** Figure 1
 
@@ -85,11 +85,11 @@ The following configuration was applied:
 |--------|-------|
 | Type | Deduction |
 | Abbreviation | PT |
-| Condition | `GROSS >= 15000` |
+| Condition | `(B + HRA + SA) >= 15000` |
 | Amount | `200` |
 | Amount Based on Formula | Disabled |
 
-Employees earning below the configured threshold do not receive the Professional Tax deduction, while employees meeting the threshold are deducted a fixed amount of ₹200.
+Professional Tax was configured as a fixed deduction of **₹200** whenever **Basic + HRA + Special Allowance** is **₹15,000 or above**.
 
 **Reference:** Figure 2
 
@@ -108,7 +108,7 @@ Verified that both deduction components were included in the required Salary Str
 - Grade A Structure
 - Grade C Structure
 
-The following deduction components are present:
+The following deduction components are present and will be included during payroll processing:
 
 - Provident Fund (PF)
 - Employee State Insurance (ESI)
@@ -127,29 +127,53 @@ The following deduction components are present:
 
 **Navigation:** HR → Payroll → Salary Slip
 
-Salary Slip preview was used to verify deduction eligibility.
+Generated Salary Slips for employees from different salary grades to validate statutory deduction behavior.
 
-Verification performed:
+### Grade C Employee
 
-- **Grade C Employee** (Gross Salary ≤ ₹21,000)
-  - ESI calculated as **0.75% of Gross Salary**.
-- **Grade A Employee** (Gross Salary > ₹21,000)
-  - ESI not applied.
-- Professional Tax applied according to the configured salary threshold.
+Verified that:
+
+- `(B + HRA + SA)` was within the statutory ESI threshold.
+- ESI deduction was calculated using:
+
+- Professional Tax deduction of ₹200 was applied because the configured salary condition was satisfied.
+
+**Reference:** Figure 4
+
+![Grade C Salary Slip](../images/issue-14/grade-c-salary-slip.png)
+
+*Figure 4: Grade C Salary Slip showing ESI and Professional Tax deductions.*
+
+### Grade A Employee
+
+Verified that:
+
+- `(B + HRA + SA)` exceeded ₹21,000.
+- ESI deduction was **not applied**.
+- Professional Tax deduction of ₹200 continued to apply according to the configured condition.
+
+**Reference:** Figure 5
+
+![Grade A Salary Slip](../images/issue-14/grade-a-salary-slip.png)
+
+*Figure 5: Grade A Salary Slip where ESI is not deducted because the employee exceeds the statutory threshold.*
 
 ---
 
 ## Version Notes
 
-During implementation, the current ERPNext v15 environment differed slightly from the original task instructions.
+During implementation, several adjustments were required because the ERPNext v15 environment differed from the original issue instructions.
 
 Observed differences:
 
-- ERPNext already contained predefined **Employee State Insurance (ESI)** and **Professional Tax (PT)** Salary Components, therefore no additional components were created.
-- Existing Salary Structures already contained deduction rows for ESI and Professional Tax. The implementation focused on configuring the required conditions and formulas instead of adding duplicate rows.
-- Professional Tax was implemented using a salary threshold condition with a fixed deduction amount, matching the project requirements.
+- ERPNext already contained predefined Employee State Insurance (ESI) and Professional Tax (PT) Salary Components.
+- Existing Salary Structures already included deduction rows for ESI and Professional Tax.
+- The project salary structure did not use a `GROSS` abbreviation. Instead, statutory deductions were configured using:
 
-These changes preserved the intended payroll configuration while remaining compatible with ERPNext v15.
+to calculate salary eligibility.
+
+- Professional Tax was configured using a fixed amount with a salary condition instead of a formula.
+- Depends on Payment Days remained disabled to avoid duplicate deduction calculations.
 
 ---
 
@@ -159,25 +183,28 @@ These changes preserved the intended payroll configuration while remaining compa
 |---|-------|--------|
 | 1 | Existing ESI component verified | ✅ |
 | 2 | ESI configured as Deduction | ✅ |
-| 3 | ESI condition configured as `GROSS <= 21000` | ✅ |
-| 4 | ESI formula configured as `GROSS * 0.0075` | ✅ |
+| 3 | ESI condition configured as `(B + HRA + SA) <= 21000` | ✅ |
+| 4 | ESI formula configured as `(B + HRA + SA) * 0.0075` | ✅ |
 | 5 | Existing Professional Tax component verified | ✅ |
-| 6 | Professional Tax threshold configured as `GROSS >= 15000` | ✅ |
-| 7 | Professional Tax amount configured as ₹200 | ✅ |
+| 6 | Professional Tax condition configured as `(B + HRA + SA) >= 15000` | ✅ |
+| 7 | Professional Tax fixed amount configured as ₹200 | ✅ |
 | 8 | ESI present in Grade A Structure | ✅ |
 | 9 | ESI present in Grade C Structure | ✅ |
-|10 | Professional Tax present in Grade A Structure | ✅ |
-|11 | Professional Tax present in Grade C Structure | ✅ |
-|12 | Salary Slip verification completed | ✅ |
+| 10 | Professional Tax present in Grade A Structure | ✅ |
+| 11 | Professional Tax present in Grade C Structure | ✅ |
+| 12 | Grade C Salary Slip verified | ✅ |
+| 13 | Grade A Salary Slip verified | ✅ |
 
 ---
 
 ## Observations
 
-- ERPNext already included predefined **Employee State Insurance (ESI)** and **Professional Tax (PT)** Salary Components.
-- ESI uses both a **condition** and a **formula**, ensuring deductions are calculated only for employees meeting the statutory wage eligibility.
-- Professional Tax uses a salary threshold condition with a fixed deduction amount.
-- Existing Salary Structures already contained deduction rows, requiring only configuration updates instead of structural changes.
+- ERPNext already included predefined Employee State Insurance (ESI) and Professional Tax (PT) Salary Components.
+- The project salary structure calculates statutory deductions using **Basic + HRA + Special Allowance** instead of a Gross Salary component.
+- ESI is calculated only when `(B + HRA + SA) <= ₹21,000`.
+- Professional Tax is deducted as a fixed amount of ₹200 when `(B + HRA + SA) >= ₹15,000`.
+- Existing Salary Structures already contained deduction rows, therefore only configuration updates were required.
+- Salary Slip verification confirmed that ESI is applied only to eligible employees while Professional Tax follows the configured salary threshold.
 
 ---
 
@@ -185,15 +212,15 @@ These changes preserved the intended payroll configuration while remaining compa
 
 ✅ Verified and configured the existing Employee State Insurance (ESI) Salary Component.
 
-✅ Configured ESI deduction as **0.75% of Gross Salary** with eligibility condition **`GROSS <= 21000`**.
+✅ Configured ESI using the condition `(B + HRA + SA) <= 21000` with the formula:
 
-✅ Configured Professional Tax using the required salary threshold **`GROSS >= 15000`** with a deduction amount of **₹200**.
+✅ Configured Professional Tax using the condition `(B + HRA + SA) >= 15000` with a fixed deduction amount of **₹200**.
 
 ✅ Verified both deduction components within the required Salary Structures.
 
-✅ Confirmed deduction eligibility through Salary Slip verification.
+✅ Validated deduction behavior using Salary Slips for both Grade C and Grade A employees.
 
-The payroll configuration is now ready for statutory deduction processing.
+The payroll environment is correctly configured for statutory ESI and Professional Tax calculations in ERPNext v15.
 
 ---
 
@@ -224,4 +251,4 @@ Proceed to the next payroll configuration task.
 
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
-| 03-Aug-2026 | 1.0 | Shubham Patil | Configured Employee State Insurance (ESI) with statutory wage eligibility and deduction formula, configured Professional Tax salary threshold, verified Salary Structures, documented ERPNext v15 implementation differences, and validated payroll deduction eligibility. |
+| 03-Aug-2026 | 1.1 | Shubham Patil | Configured existing ESI and Professional Tax components using project salary components (B, HRA, SA), updated Salary Structures, verified statutory deductions using Grade A and Grade C Salary Slips, and documented ERPNext v15 implementation differences. |
