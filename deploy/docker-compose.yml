@@ -110,7 +110,8 @@ services:
       PROXY_READ_TIMEOUT: "120"
       CLIENT_MAX_BODY_SIZE: 50m
     ports:
-      - "${PORT:-8082}:8080"
+      - "${EMPLOYEE_PORT:-8082}:8080"
+      - "${ADMIN_PORT:-8083}:8081"
     depends_on:
       - backend
       - websocket

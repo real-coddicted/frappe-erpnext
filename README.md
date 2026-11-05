@@ -146,3 +146,7 @@ To enable the automated CI/CD pipeline, ensure the following secrets are configu
 | :--- | :--- |
 | `DOCKER_USERNAME` | Gitea username with push permissions to the package registry (`sbpatil`) |
 | `DOCKER_PASSWORD` | Gitea Personal Access Token with `write:package` and `read:repository` |
+
+## HR ESS portal
+Docker image, ports and routes: see [deploy/README.md](deploy/README.md).
+

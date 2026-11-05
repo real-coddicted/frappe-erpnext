@@ -24,9 +24,5 @@ RUN bench build --app hrms --app eme_admin --app hr_ess_api
 
 USER root
 COPY --from=ui --chown=frappe:frappe /ui/dist /home/frappe/portal
-COPY deploy/portal-blocks.conf /tmp/portal-blocks.conf
-RUN awk 'FNR==NR{b=b $0 "\n"; next} /^[ \t]*location \/ \{$/ && !d {printf "%s", b; d=1} {print}' /tmp/portal-blocks.conf /templates/nginx/frappe.conf.template > /tmp/new.template \
-    && cat /tmp/new.template > /templates/nginx/frappe.conf.template \
-    && grep -q portal-assets /templates/nginx/frappe.conf.template \
-    && rm /tmp/new.template /tmp/portal-blocks.conf
+COPY deploy/frappe.conf.template /templates/nginx/frappe.conf.template
 USER frappe
