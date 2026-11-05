@@ -1,0 +1,18 @@
+.DS_Store
+*.pyc
+*.egg-info
+*.swp
+tags
+node_modules
+__pycache__
+.env
+.env.*
+!.env.example
+deploy/.env
+
+dist
+*.diff
+dashboard/portal.conf
+
+# deployment secrets
+deploy/.env

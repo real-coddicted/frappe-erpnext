@@ -239,3 +239,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+
+# deployment secrets
+deploy/.env
