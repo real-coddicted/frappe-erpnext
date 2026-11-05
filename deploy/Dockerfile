@@ -13,7 +13,7 @@ RUN bench get-app hrms --branch version-15
 RUN --mount=type=secret,id=gitea_token,uid=1000 \
     T=$(cat /run/secrets/gitea_token) && \
     bench get-app eme_admin https://sbpatil:${T}@gitea.local.coddicted.com/sbpatil/frappe_admin.git && \
-    git -C apps/eme_admin remote set-url upstream https://gitea.local.coddicted.com/sbpatil/frappe_admin.git
+    git -C apps/eme_admin remote set-url origin https://gitea.local.coddicted.com/sbpatil/frappe_admin.git && git -C apps/eme_admin remote set-url upstream https://gitea.local.coddicted.com/sbpatil/frappe_admin.git
 
 COPY --chown=frappe:frappe apps/hr_ess_api /home/frappe/frappe-bench/apps/hr_ess_api
 RUN ./env/bin/pip install --no-cache-dir -e ./apps/hr_ess_api \
