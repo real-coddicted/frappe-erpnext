@@ -18,9 +18,9 @@ RUN --mount=type=secret,id=gitea_token,uid=1000 \
 
 COPY --chown=frappe:frappe apps/hr_ess_api /home/frappe/frappe-bench/apps/hr_ess_api
 RUN ./env/bin/pip install --no-cache-dir -e ./apps/hr_ess_api \
-    && (grep -qxF 'hr_ess_api' sites/apps.txt || echo 'hr_ess_api' >> sites/apps.txt)
+    && python3 -c "p='sites/apps.txt'; a=open(p).read().splitlines(); 'hr_ess_api' in a or open(p,'w').write('\n'.join(a + ['hr_ess_api']) + '\n')"
 
-RUN bench build --app hrms --app eme_admin --app hr_ess_api
+RUN bench build --apps hrms,eme_admin
 
 USER root
 COPY --from=ui --chown=frappe:frappe /ui/dist /home/frappe/portal
