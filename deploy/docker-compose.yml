@@ -2,8 +2,8 @@ x-app: &app
   image: ${IMAGE}
   restart: unless-stopped
   volumes:
-    - sites:/home/frappe/frappe-bench/sites
-    - logs:/home/frappe/frappe-bench/logs
+    - ./sites:/home/frappe/frappe-bench/sites
+    - ./logs:/home/frappe/frappe-bench/logs
   depends_on:
     configurator:
       condition: service_completed_successfully
@@ -24,7 +24,7 @@ services:
       interval: 5s
       retries: 20
     volumes:
-      - db-data:/var/lib/mysql
+      - ./db-data:/var/lib/mysql
 
   redis-cache:
     image: redis:6.2-alpine
@@ -34,7 +34,7 @@ services:
     image: redis:6.2-alpine
     restart: unless-stopped
     volumes:
-      - redis-queue-data:/data
+      - ./redis-queue-data:/data
 
   configurator:
     image: ${IMAGE}
@@ -50,8 +50,8 @@ services:
         bench set-config -g redis_socketio redis://redis-queue:6379;
         bench set-config -gp socketio_port 9000
     volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+      - ./sites:/home/frappe/frappe-bench/sites
+      - ./logs:/home/frappe/frappe-bench/logs
     depends_on:
       db:
         condition: service_healthy
@@ -115,9 +115,3 @@ services:
     depends_on:
       - backend
       - websocket
-
-volumes:
-  sites:
-  logs:
-  db-data:
-  redis-queue-data:

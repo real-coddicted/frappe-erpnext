@@ -12,6 +12,10 @@ On the employee port, `/app` redirects to `/`. The portal pages are not served o
 
 ## Run
 1. `cp .env.example .env` and set `IMAGE`, `DB_ROOT_PASSWORD`, `ADMIN_PASSWORD`, `EMPLOYEE_PORT`, `ADMIN_PORT`.
-2. `docker compose --env-file .env -f docker-compose.yml up -d`
-3. Wait for `create-site` to finish, then open the two ports.
+2. Create runtime directories in the working directory:
+   ```bash
+   mkdir -p sites logs db-data redis-queue-data
+   ```
+3. `docker compose --env-file .env -f docker-compose.yml up -d`
+4. Wait for `create-site` to finish, then open the two ports.
 
