@@ -22,7 +22,16 @@ RUN ./env/bin/pip install --no-cache-dir -e ./apps/hr_ess_api \
 
 RUN bench build --apps hrms,eme_admin
 
+RUN cp -R /home/frappe/frappe-bench/sites/assets/. /home/frappe/frappe-bench/assets/ \
+    && rm -rf /home/frappe/frappe-bench/sites/assets
+
 USER root
 COPY --from=ui --chown=frappe:frappe /ui/dist /home/frappe/portal
 COPY deploy/frappe.conf.template /templates/nginx/frappe.conf.template
 USER frappe
+
+VOLUME [ \
+  "/home/frappe/frappe-bench/sites", \
+  "/home/frappe/frappe-bench/logs" \
+]
+
