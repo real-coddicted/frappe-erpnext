@@ -29,6 +29,7 @@ server {
 	real_ip_recursive ${UPSTREAM_REAL_IP_RECURSIVE};
 
 	location /assets {
+		root /home/frappe/frappe-bench;
 		try_files $uri =404;
 	}
 
@@ -158,6 +159,7 @@ server {
 	real_ip_recursive ${UPSTREAM_REAL_IP_RECURSIVE};
 
 	location /assets {
+		root /home/frappe/frappe-bench;
 		try_files $uri =404;
 	}
 
