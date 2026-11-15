@@ -9,11 +9,13 @@ RUN npm run build
 FROM frappe/erpnext:version-15
 USER frappe
 WORKDIR /home/frappe/frappe-bench
-RUN bench get-app hrms --branch version-15
+RUN yarn config set ignore-scripts true \
+    && bench get-app hrms https://github.com/frappe/hrms.git --branch version-15 --skip-assets \
+    && rm -f apps/hrms/package.json
 RUN --mount=type=secret,id=gitea_token,uid=1000 \
     T=$(cat /run/secrets/gitea_token) && \
     git config --global url."https://sbpatil:${T}@gitea.local.coddicted.com/".insteadOf "https://gitea.local.coddicted.com/" && \
-    bench get-app eme_admin https://gitea.local.coddicted.com/sbpatil/frappe_admin.git && \
+    bench get-app eme_admin https://gitea.local.coddicted.com/sbpatil/frappe_admin.git --skip-assets && \
     git config --global --unset-all url."https://sbpatil:${T}@gitea.local.coddicted.com/".insteadOf
 
 COPY --chown=frappe:frappe apps/hr_ess_api /home/frappe/frappe-bench/apps/hr_ess_api
