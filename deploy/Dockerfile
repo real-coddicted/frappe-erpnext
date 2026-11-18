@@ -22,14 +22,10 @@ COPY --chown=frappe:frappe apps/hr_ess_api /home/frappe/frappe-bench/apps/hr_ess
 RUN ./env/bin/pip install --no-cache-dir -e ./apps/hr_ess_api \
     && python3 -c "p='sites/apps.txt'; a=open(p).read().splitlines(); 'hr_ess_api' in a or open(p,'w').write('\n'.join(a + ['hr_ess_api']) + '\n')"
 
-RUN cp /home/frappe/frappe-bench/assets/assets.json /tmp/base-assets.json \
-    && cp /home/frappe/frappe-bench/assets/assets-rtl.json /tmp/base-assets-rtl.json \
-    && rm -rf /home/frappe/frappe-bench/sites/assets \
+RUN rm -rf /home/frappe/frappe-bench/sites/assets \
     && ln -s /home/frappe/frappe-bench/assets /home/frappe/frappe-bench/sites/assets \
-    && bench build --apps hrms,eme_admin \
-    && rm -rf /home/frappe/frappe-bench/sites/assets \
-    && python3 -c "import json; [(lambda m, p: open(p, 'w').write(json.dumps(m, indent=4)))({**json.load(open(f'/tmp/base-{f}')), **json.load(open(f'/home/frappe/frappe-bench/assets/{f}'))}, f'/home/frappe/frappe-bench/assets/{f}') for f in ('assets.json','assets-rtl.json')]" \
-    && rm -f /tmp/base-assets.json /tmp/base-assets-rtl.json
+    && bench build \
+    && rm -rf /home/frappe/frappe-bench/sites/assets
 
 USER root
 COPY --from=ui --chown=frappe:frappe /ui/dist /home/frappe/portal
