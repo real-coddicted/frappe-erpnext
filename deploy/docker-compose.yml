@@ -17,6 +17,12 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
       - --skip-innodb-read-only-compressed
+      - --innodb-buffer-pool-size=1G
+      - --max-connections=300
+      - --innodb-file-per-table=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --expire-logs-days=7
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     healthcheck:
@@ -39,16 +45,25 @@ services:
   configurator:
     image: ${IMAGE}
     restart: "no"
+    user: "0:0"
     command:
       - bash
       - -c
       - >
-        bench set-config -g db_host db;
-        bench set-config -gp db_port 3306;
-        bench set-config -g redis_cache redis://redis-cache:6379;
-        bench set-config -g redis_queue redis://redis-queue:6379;
-        bench set-config -g redis_socketio redis://redis-queue:6379;
-        bench set-config -gp socketio_port 9000
+        mkdir -p /home/frappe/frappe-bench/sites /home/frappe/frappe-bench/logs;
+        chown -R 1000:1000 /home/frappe/frappe-bench/sites /home/frappe/frappe-bench/logs;
+        chmod -R 755 /home/frappe/frappe-bench/sites /home/frappe/frappe-bench/logs;
+        su -c "
+          cd /home/frappe/frappe-bench;
+          [ -f sites/common_site_config.json ] || echo '{}' > sites/common_site_config.json;
+          [ -f sites/apps.txt ] || ls -1 apps > sites/apps.txt;
+          bench set-config -g db_host db;
+          bench set-config -gp db_port 3306;
+          bench set-config -g redis_cache redis://redis-cache:6379;
+          bench set-config -g redis_queue redis://redis-queue:6379;
+          bench set-config -g redis_socketio redis://redis-queue:6379;
+          bench set-config -gp socketio_port 9000;
+        " frappe
     volumes:
       - ./sites:/home/frappe/frappe-bench/sites
       - ./logs:/home/frappe/frappe-bench/logs
@@ -80,6 +95,13 @@ services:
 
   backend:
     <<: *app
+    environment:
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f -H \"Host: $${FRAPPE_SITE_NAME_HEADER}\" http://127.0.0.1:8000/api/method/ping || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   websocket:
     <<: *app
@@ -88,14 +110,29 @@ services:
   scheduler:
     <<: *app
     command: [bench, schedule]
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q schedule /proc/1/cmdline || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   queue-short:
     <<: *app
     command: [bench, worker, --queue, "short,default"]
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q worker /proc/1/cmdline || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   queue-long:
     <<: *app
     command: [bench, worker, --queue, long]
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q worker /proc/1/cmdline || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   frontend:
     <<: *app
@@ -110,8 +147,36 @@ services:
       PROXY_READ_TIMEOUT: "120"
       CLIENT_MAX_BODY_SIZE: 50m
     ports:
-      - "${EMPLOYEE_PORT:-8082}:8080"
-      - "${ADMIN_PORT:-8083}:8081"
+      - "127.0.0.1:${EMPLOYEE_PORT:-8082}:8080"
+      - "127.0.0.1:${ADMIN_PORT:-8083}:8081"
     depends_on:
       - backend
       - websocket
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://127.0.0.1:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      - PORTAL_DOMAIN=${PORTAL_DOMAIN:-portal.example.com}
+      - DESK_DOMAIN=${DESK_DOMAIN:-desk.example.com}
+      - ACME_EMAIL=${ACME_EMAIL:-admin@example.com}
+      - FRAPPE_SITE_NAME_HEADER=${FRAPPE_SITE_NAME_HEADER:-mysite.localhost}
+      - CADDY_GLOBAL_OPTIONS=${CADDY_GLOBAL_OPTIONS:-}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
+
+volumes:
+  caddy-data:
+  caddy-config:

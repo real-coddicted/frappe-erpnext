@@ -1,0 +1,33 @@
+# Caddy reverse proxy for Frappe HR ESS Portal & Admin Desk
+# Provides automated Let's Encrypt / ZeroSSL HTTPS certificate management.
+
+{
+    admin off
+    email {$ACME_EMAIL:admin@example.com}
+    {$CADDY_GLOBAL_OPTIONS}
+}
+
+# Employee Self-Service Portal
+{$PORTAL_DOMAIN:portal.example.com} {
+    encode zstd gzip
+    reverse_proxy frontend:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto https
+    }
+}
+
+# Frappe / ERPNext Desk Admin
+{$DESK_DOMAIN:desk.example.com} {
+    encode zstd gzip
+    request_body {
+        max_size 50MB
+    }
+    reverse_proxy frontend:8081 {
+        header_up Host {$FRAPPE_SITE_NAME_HEADER:mysite.localhost}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto https
+    }
+}
